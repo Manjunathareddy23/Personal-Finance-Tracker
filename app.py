@@ -74,7 +74,10 @@ def load_data():
         try:
             with open("expenses.json", "r") as f:
                 content = f.read()
-                st.session_state.expenses = json.loads(content) if content else []  # Handle empty file gracefully
+                if content.strip():  # Check if file is not empty
+                    st.session_state.expenses = json.loads(content)
+                else:
+                    st.session_state.expenses = []  # Handle empty file gracefully
         except json.JSONDecodeError:
             st.error("Error decoding expenses data. The file might be corrupted.")
             st.session_state.expenses = []  # Fallback to empty list if decoding fails
@@ -84,7 +87,10 @@ def load_data():
         try:
             with open("budget.json", "r") as f:
                 content = f.read()
-                st.session_state.budget = json.loads(content) if content else {}  # Handle empty file gracefully
+                if content.strip():  # Check if file is not empty
+                    st.session_state.budget = json.loads(content)
+                else:
+                    st.session_state.budget = {}  # Handle empty file gracefully
         except json.JSONDecodeError:
             st.error("Error decoding budget data. The file might be corrupted.")
             st.session_state.budget = {}  # Fallback to empty dict if decoding fails
