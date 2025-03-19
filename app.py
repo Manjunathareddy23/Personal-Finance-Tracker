@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import json
 import os
 
 # Firebase authentication setup (you need to set this up in Firebase)
@@ -67,41 +66,36 @@ if 'expenses' not in st.session_state:
 if 'budget' not in st.session_state:
     st.session_state.budget = {}
 
-# Function to load saved data from JSON files (persistent data)
+# Function to load saved data from CSV/Excel files (persistent data)
 def load_data():
-    # Load expenses
-    if os.path.exists("expenses.json"):
+    # Load expenses from CSV file
+    if os.path.exists("expenses.csv"):
         try:
-            with open("expenses.json", "r") as f:
-                content = f.read()
-                if content.strip():  # Check if file is not empty
-                    st.session_state.expenses = json.loads(content)
-                else:
-                    st.session_state.expenses = []  # Handle empty file gracefully
-        except json.JSONDecodeError:
-            st.error("Error decoding expenses data. The file might be corrupted.")
-            st.session_state.expenses = []  # Fallback to empty list if decoding fails
+            df_expenses = pd.read_csv("expenses.csv")
+            st.session_state.expenses = df_expenses.to_dict(orient="records") if not df_expenses.empty else []
+        except Exception as e:
+            st.error(f"Error loading expenses data: {e}")
+            st.session_state.expenses = []  # Fallback to empty list if loading fails
     
-    # Load budget
-    if os.path.exists("budget.json"):
+    # Load budget from CSV file
+    if os.path.exists("budget.csv"):
         try:
-            with open("budget.json", "r") as f:
-                content = f.read()
-                if content.strip():  # Check if file is not empty
-                    st.session_state.budget = json.loads(content)
-                else:
-                    st.session_state.budget = {}  # Handle empty file gracefully
-        except json.JSONDecodeError:
-            st.error("Error decoding budget data. The file might be corrupted.")
-            st.session_state.budget = {}  # Fallback to empty dict if decoding fails
+            df_budget = pd.read_csv("budget.csv")
+            st.session_state.budget = pd.Series(df_budget['Budget'].values, index=df_budget['Category']).to_dict() if not df_budget.empty else {}
+        except Exception as e:
+            st.error(f"Error loading budget data: {e}")
+            st.session_state.budget = {}  # Fallback to empty dict if loading fails
 
-# Function to save data to JSON files (persistent data)
+# Function to save data to CSV files (persistent data)
 def save_data():
     try:
-        with open("expenses.json", "w") as f:
-            json.dump(st.session_state.expenses, f)
-        with open("budget.json", "w") as f:
-            json.dump(st.session_state.budget, f)
+        # Save expenses to CSV
+        df_expenses = pd.DataFrame(st.session_state.expenses)
+        df_expenses.to_csv("expenses.csv", index=False)
+        
+        # Save budget to CSV
+        df_budget = pd.DataFrame(list(st.session_state.budget.items()), columns=['Category', 'Budget'])
+        df_budget.to_csv("budget.csv", index=False)
     except Exception as e:
         st.error(f"Error saving data: {e}")
 
@@ -177,7 +171,7 @@ def show_reports():
         st.plotly_chart(fig)
 
         # Budget vs Expenses Pie Chart
-        budget_df = pd.DataFrame(st.session_state.budget.items(), columns=['Category', 'Budget'])
+        budget_df = pd.DataFrame(list(st.session_state.budget.items()), columns=['Category', 'Budget'])
         budget_expenses_df = pd.merge(expense_summary, budget_df, how='left', on='Category')
         budget_expenses_df['Remaining'] = budget_expenses_df['Budget'] - budget_expenses_df['Amount']
 
