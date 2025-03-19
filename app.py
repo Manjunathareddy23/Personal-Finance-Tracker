@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
+import json
 
 # Firebase authentication setup (you need to set this up in Firebase)
 import firebase_admin
@@ -60,11 +61,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Initialize session state to store expenses and budgets
+# Initialize session state to store expenses, budgets, and financial goals
 if 'expenses' not in st.session_state:
     st.session_state.expenses = []
 if 'budget' not in st.session_state:
     st.session_state.budget = {}
+if 'financial_goals' not in st.session_state:
+    st.session_state.financial_goals = {}
 
 # Function to load saved data from CSV/Excel files (persistent data)
 def load_data():
@@ -86,6 +89,15 @@ def load_data():
             st.error(f"Error loading budget data: {e}")
             st.session_state.budget = {}  # Fallback to empty dict if loading fails
 
+    # Load financial goals from JSON file
+    if os.path.exists("financial_goals.json"):
+        try:
+            with open("financial_goals.json", "r") as file:
+                st.session_state.financial_goals = json.load(file)
+        except Exception as e:
+            st.error(f"Error loading financial goals data: {e}")
+            st.session_state.financial_goals = {}
+
 # Function to save data to CSV files (persistent data)
 def save_data():
     try:
@@ -96,6 +108,10 @@ def save_data():
         # Save budget to CSV
         df_budget = pd.DataFrame(list(st.session_state.budget.items()), columns=['Category', 'Budget'])
         df_budget.to_csv("budget.csv", index=False)
+
+        # Save financial goals to JSON
+        with open("financial_goals.json", "w") as file:
+            json.dump(st.session_state.financial_goals, file)
     except Exception as e:
         st.error(f"Error saving data: {e}")
 
@@ -180,6 +196,21 @@ def show_reports():
         st.plotly_chart(fig2)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Function to display financial goals
+def show_financial_goals():
+    st.markdown('<div class="form-section">', unsafe_allow_html=True)
+    st.subheader('Set Financial Goals')
+    goal_name = st.text_input("Goal Name", key="goal_name")
+    target_amount = st.number_input("Target Amount", min_value=0, step=1, key="target_amount")
+    if st.button('Set Goal'):
+        if goal_name and target_amount > 0:
+            st.session_state.financial_goals[goal_name] = target_amount
+            save_data()
+            st.success(f"Goal '{goal_name}' set to ${target_amount}")
+        else:
+            st.error("Please enter a valid goal name and target amount")
+    st.markdown('</div>', unsafe_allow_html=True)
+
 # Streamlit Layout
 st.title("Personal Finance Tracker")
 
@@ -187,7 +218,7 @@ st.title("Personal Finance Tracker")
 load_data()
 
 # Layout for the main sections
-tabs = st.sidebar.radio("Choose an option", ["Add Expense", "View Expenses", "Set Budget", "Financial Reports"])
+tabs = st.sidebar.radio("Choose an option", ["Add Expense", "View Expenses", "Set Budget", "Financial Reports", "Financial Goals"])
 
 # Flexbox layout for the sections
 st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -200,5 +231,7 @@ elif tabs == "Set Budget":
     show_budget_form()
 elif tabs == "Financial Reports":
     show_reports()
+elif tabs == "Financial Goals":
+    show_financial_goals()
 
 st.markdown('</div>', unsafe_allow_html=True)
