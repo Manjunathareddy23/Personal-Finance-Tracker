@@ -196,19 +196,26 @@ def show_reports():
         st.plotly_chart(fig2)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Function to display budget overview
+def show_budget_overview():
+    st.markdown('<div class="form-section">', unsafe_allow_html=True)
+    st.subheader('View Budget Overview')
+    if st.session_state.budget:
+        budget_df = pd.DataFrame(list(st.session_state.budget.items()), columns=['Category', 'Budget'])
+        st.write(budget_df)
+    else:
+        st.write("No budget set yet.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
 # Function to display financial goals
 def show_financial_goals():
     st.markdown('<div class="form-section">', unsafe_allow_html=True)
-    st.subheader('Set Financial Goals')
-    goal_name = st.text_input("Goal Name", key="goal_name")
-    target_amount = st.number_input("Target Amount", min_value=0, step=1, key="target_amount")
-    if st.button('Set Goal'):
-        if goal_name and target_amount > 0:
-            st.session_state.financial_goals[goal_name] = target_amount
-            save_data()
-            st.success(f"Goal '{goal_name}' set to ${target_amount}")
-        else:
-            st.error("Please enter a valid goal name and target amount")
+    st.subheader('View Financial Goals')
+    if st.session_state.financial_goals:
+        goals_df = pd.DataFrame(list(st.session_state.financial_goals.items()), columns=['Goal', 'Target Amount'])
+        st.write(goals_df)
+    else:
+        st.write("No financial goals set yet.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Streamlit Layout
@@ -218,7 +225,7 @@ st.title("Personal Finance Tracker")
 load_data()
 
 # Layout for the main sections
-tabs = st.sidebar.radio("Choose an option", ["Add Expense", "View Expenses", "Set Budget", "Financial Reports", "Financial Goals"])
+tabs = st.sidebar.radio("Choose an option", ["Add Expense", "View Expenses", "Set Budget", "Financial Reports", "View Budget", "View Financial Goals"])
 
 # Flexbox layout for the sections
 st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -231,7 +238,9 @@ elif tabs == "Set Budget":
     show_budget_form()
 elif tabs == "Financial Reports":
     show_reports()
-elif tabs == "Financial Goals":
+elif tabs == "View Budget":
+    show_budget_overview()
+elif tabs == "View Financial Goals":
     show_financial_goals()
 
 st.markdown('</div>', unsafe_allow_html=True)
