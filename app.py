@@ -66,7 +66,7 @@ if 'expenses' not in st.session_state:
 if 'budget' not in st.session_state:
     st.session_state.budget = {}
 
-# Function to load saved data from CSV/Excel files (persistent data)
+# Function to load saved data from CSV/Excel files 
 def load_data():
     # Load expenses from CSV file
     if os.path.exists("expenses.csv"):
