@@ -10,7 +10,7 @@ from firebase_admin import credentials, auth
 
 # Initialize Firebase Admin SDK (this will need a JSON file for Firebase)
 if not firebase_admin._apps:
-    cred = credentials.Certificate("path_to_your_firebase_credentials.json")
+    cred = credentials.Certificate("financetracker-8bb74-firebase-adminsdk-fbsvc-44d0570416.json")
     firebase_admin.initialize_app(cred)
 
 # Inject Tailwind CSS via CDN link
