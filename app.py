@@ -69,19 +69,33 @@ if 'budget' not in st.session_state:
 
 # Function to load saved data from JSON files (persistent data)
 def load_data():
+    # Load expenses
     if os.path.exists("expenses.json"):
-        with open("expenses.json", "r") as f:
-            st.session_state.expenses = json.load(f)
+        try:
+            with open("expenses.json", "r") as f:
+                st.session_state.expenses = json.load(f) if f.read() else []  # Handle empty file gracefully
+        except json.JSONDecodeError:
+            st.error("Error decoding expenses data. The file might be corrupted.")
+            st.session_state.expenses = []  # Fallback to empty list if decoding fails
+    
+    # Load budget
     if os.path.exists("budget.json"):
-        with open("budget.json", "r") as f:
-            st.session_state.budget = json.load(f)
+        try:
+            with open("budget.json", "r") as f:
+                st.session_state.budget = json.load(f) if f.read() else {}  # Handle empty file gracefully
+        except json.JSONDecodeError:
+            st.error("Error decoding budget data. The file might be corrupted.")
+            st.session_state.budget = {}  # Fallback to empty dict if decoding fails
 
 # Function to save data to JSON files (persistent data)
 def save_data():
-    with open("expenses.json", "w") as f:
-        json.dump(st.session_state.expenses, f)
-    with open("budget.json", "w") as f:
-        json.dump(st.session_state.budget, f)
+    try:
+        with open("expenses.json", "w") as f:
+            json.dump(st.session_state.expenses, f)
+        with open("budget.json", "w") as f:
+            json.dump(st.session_state.budget, f)
+    except Exception as e:
+        st.error(f"Error saving data: {e}")
 
 # Function to display the budget form
 def show_budget_form():
